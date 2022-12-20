@@ -1,0 +1,6 @@
+__pycache__/
+
+static/*
+!static/couscous
+
+.env

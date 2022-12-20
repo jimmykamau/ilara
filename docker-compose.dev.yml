@@ -1,0 +1,64 @@
+services:
+  db:
+    restart: unless-stopped
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    networks: 
+      - backend
+    environment: 
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  web:
+    restart: always
+    build:
+      context: ./web
+      dockerfile: dockerfile.dev
+    env_file:
+      - ./web/.env
+    expose:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./web:/usr/src/app
+      - ./web/static:/usr/src/app/static
+    networks: 
+      - backend
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+              python manage.py makemigrations --noinput &&
+              python manage.py migrate --noinput &&
+              gunicorn ilara.wsgi:application -w 2 -b :8000 --reload"
+  
+  proxy:
+    restart: always
+    build:
+      context: ./proxy
+      dockerfile: dockerfile.dev
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+    volumes:
+      - ./web/static:/usr/src/app/static
+    networks: 
+      - backend
+  
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025" # smtp server
+      - "8025:8025" # web ui. Visit http://localhost:8025/ to check emails
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+
+networks: 
+  backend:

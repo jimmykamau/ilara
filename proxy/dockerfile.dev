@@ -1,0 +1,7 @@
+FROM nginx:alpine
+COPY nginx-dev.conf /etc/nginx/nginx.conf
+WORKDIR /etc/ssl/certs
+COPY certs/ .
+
+EXPOSE 443
+EXPOSE 80

@@ -1,0 +1,12 @@
+FROM python:3.11.1-alpine
+
+ARG ENVIRONMENT_SETTINGS
+
+WORKDIR /usr/src/app
+
+COPY requirements.txt requirements.txt
+
+RUN apk update
+RUN apk add musl-dev postgresql-dev gcc
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
