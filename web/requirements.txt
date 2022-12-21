@@ -7,12 +7,18 @@ dj-database-url==1.2.0 ; python_version >= "3.11" and python_version < "4.0" \
 dj-email-url==1.0.6 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:55ffe3329e48f54f8a75aa36ece08f365e09d61f8a209773ef09a1d4760e699a \
     --hash=sha256:cbd08327fbb08b104eac160fb4703f375532e4c0243eb230f5b960daee7a96db
+django-phonenumber-field[phonenumbers]==7.0.1 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:969bbcab203d697ea44c38726bdc7d72ac9f1ba397694b9f57422b471ad73590 \
+    --hash=sha256:9e2b302f239e4703fa9030e44833db5eb524a731335fd77b0b703bd352fbe8d0
 django==4.1.4 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:0b223bfa55511f950ff741983d408d78d772351284c75e9f77d2b830b6b4d148 \
     --hash=sha256:d38a4e108d2386cb9637da66a82dc8d0733caede4c83c4afdbda78af4214211b
 gunicorn==20.1.0 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e \
     --hash=sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8
+phonenumbers==8.13.2 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:0179f688d48c0e7e161eb7b9d86d587940af1f5174f97c1fdfd893c599c0d94a \
+    --hash=sha256:884b26f775205261f4dc861371dce217c1661a4942fb3ec3624e290fb51869bf
 psycopg2==2.9.5 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:093e3894d2d3c592ab0945d9eba9d139c139664dcf83a1c440b8a7aa9bb21955 \
     --hash=sha256:190d51e8c1b25a47484e52a79638a8182451d6f6dff99f26ad9bd81e5359a0fa \
