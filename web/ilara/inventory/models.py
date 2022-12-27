@@ -13,6 +13,9 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self) -> str:
+        return f"{self.name}"
+
     class Meta:
         verbose_name = _("Inventory Item")
         verbose_name_plural = _("Inventory Items")
