@@ -1,6 +1,8 @@
 __pycache__/
 
 static/*
-!static/couscous
+!static/ilara
+
+media/uploads/*
 
 .env
