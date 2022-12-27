@@ -6,6 +6,21 @@
 
 <div class="uk-container uk-container-center">
     <div class="uk-width-1-1 uk-margin-large-top uk-margin-large-bottom">
+        {% if profiles %}
+            <div class="uk-margin-large-bottom">
+                <div>
+                    Assign to customer
+                </div>
+                <div class="uk-form-controls uk-margin">
+                    <select id="assignCustomer" class="uk-select" aria-label="Select" onchange="reassignCustomer({{order.pk}})">
+                        <option value="me">Me</option>
+                        {% for profile in profiles %}
+                            <option value='{{profile.pk}}'>{{profile.user.first_name}} ({{profile.user.email}})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        {% endif %}
         {% if items %}
             <table class="uk-table uk-table-responsive uk-table-divider">
                 <thead>
@@ -37,7 +52,7 @@
             </table>
 
             <div class="uk-margin">
-                <a href="/store/checkout" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom">Checkout</a>
+                <button class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom">Process payment</button>
             </div>
         {% else %}
             <div class="uk-margin uk-container-center uk-text-center">
@@ -52,4 +67,7 @@
 
 {% block footer %}
     <script type="text/javascript" src="{% static 'ilara/checkout/js/remove-from-cart.js' %}"></script>
+    {% if profiles %}
+        <script type="text/javascript" src="{% static 'ilara/checkout/js/assign-to-user.js' %}"></script>
+    {% endif %}
 {% endblock footer%}
