@@ -25,3 +25,7 @@ urlpatterns = [
     path("store/", include(checkout)),
     path("", include(backoffice)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+admin.site.site_header = "Ilara"
+admin.site.site_title = "Ilara"
+admin.site.index_title = "Ilara Dashboard"
