@@ -5,9 +5,11 @@ from ilara.backoffice.views import (
     GetUserView,
     LogoutView,
 )
+from ilara.checkout.views import StoreFrontView
 
 urlpatterns = [
-    path("", GetUserView.as_view(), name="get_user"),
+    path("", StoreFrontView.as_view()),
+    path("user/", GetUserView.as_view(), name="get_user"),
     path("login/", AuthView.as_view(), name="login"),
     path("signup/anon/", CreateAnonymousUserView.as_view(), name="create_anon_user"),
     path("logout/", LogoutView.as_view(), name="logout"),
