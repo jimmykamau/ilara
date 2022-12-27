@@ -15,6 +15,7 @@ from pathlib import Path
 
 import dj_database_url
 import dj_email_url
+from django.urls import reverse_lazy
 
 
 def get_list(text):
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "ilara.backoffice",
     "ilara.inventory",
+    "ilara.checkout",
 ]
 
 MIDDLEWARE = [
@@ -74,11 +76,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "ilara.urls"
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(BASE_DIR), "templates")
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [TEMPLATES_DIR],
+        "DIRS": [os.path.join(os.path.dirname(BASE_DIR), "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -210,14 +211,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = os.environ.get("STATIC_URL", "static/")
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "static")
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 )
 
-MEDIA_URL = "media/"
+MEDIA_URL = os.environ.get("MEDIA_URL", "media/")
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "media")
 
 # Default primary key field type
@@ -234,3 +235,5 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 
 SECURE_REDIRECT_EXEMPT = [r"^(?!health/).*"]
+
+LOGIN_URL = reverse_lazy("login")
