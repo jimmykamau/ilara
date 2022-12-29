@@ -15,6 +15,9 @@
                             <img src="{{ product.image.url }}" class="uk-width-expand" alt="">
                         </div>
                         <div class="uk-card-body">
+                            {% if product.stock_quantity <= 10 %}
+                                <div class="uk-card-badge uk-label-warning">{{ product.stock_quantity }} in stock</div>
+                            {% endif %}
                             <h3 class="uk-card-title">{{ product.name }}</h3>
                             <p>{{ product.description|truncatechars:200 }}</p>
                         </div>
