@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView, View
 from ilara.backoffice.models import UserProfile
-from ilara.checkout.models import Order, OrderItem
+from ilara.checkout.models import Order, OrderItem, Payment
 from ilara.inventory.models import Product
 
 logger = logging.getLogger(__name__)
@@ -31,15 +31,23 @@ class CartView(LoginRequiredMixin, View):
                 user=request.user, is_paid=False
             )
             product = Product.objects.get(pk=request.POST.get("productId"))
-            order_item, created = OrderItem.objects.get_or_create(
-                order=order, product=product
-            )
-            if not created:
-                order_item.quantity += 1
-                order_item.save()
-            order.amount += product.price
-            order.save()
-            return JsonResponse({"message": "success"})
+            if product.in_stock:
+                order_item, created = OrderItem.objects.get_or_create(
+                    order=order, product=product
+                )
+                if not created:
+                    if product.stock_quantity - order_item.quantity > 1:
+                        order_item.quantity += 1
+                        order_item.save()
+                    else:
+                        return JsonResponse({"message": "Out of stock"})
+                order.amount += product.price
+                order.save()
+                return JsonResponse({"message": "success"})
+            else:
+                product.active = False
+                product.save()
+                return JsonResponse({"message": "Out of stock"})
         except Exception as e:
             return JsonResponse({"message": "error", "exception": str(e)})
 
@@ -72,6 +80,25 @@ class CheckoutView(LoginRequiredMixin, View):
             )
             context["profiles"] = profiles
         return render(request, "checkout/checkout.html", context=context)
+
+    def post(self, request):
+        try:
+            order_id = request.POST.get("orderId")
+            order = Order.objects.get(pk=order_id, is_paid=False)
+            Payment.objects.get_or_create(
+                order=order, status="cash", amount_paid=order.amount
+            )
+            order.is_paid = True
+            order.save()
+            order_items = OrderItem.objects.filter(order=order)
+            for item in order_items:
+                item.product.stock_quantity -= item.quantity
+                if item.product.stock_quantity < 1:
+                    item.product.active = False
+                item.product.save()
+            return JsonResponse({"message": "success"})
+        except Exception as e:
+            return JsonResponse({"message": "error", "exception": str(e)})
 
 
 class ReassignOrderView(LoginRequiredMixin, View):

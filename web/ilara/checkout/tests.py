@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 from ilara.backoffice.models import UserProfile
-from ilara.checkout.models import Order, OrderItem
+from ilara.checkout.models import Order, OrderItem, Payment
 from ilara.inventory.models import Product
 
 
@@ -97,6 +97,15 @@ class CartView(BaseTest):
         updated_order = Order.objects.get(user=self.user)
         self.assertEqual(self.product1.price, updated_order.amount)
 
+    def test_add_out_of_stock_item_to_cart(self):
+        self.product1.stock_quantity = 1
+        self.product1.save()
+        order = Order.objects.create(user=self.user, is_paid=False)
+        post_data = {"productId": self.product1.pk}
+        self.client.post(self.url, data=post_data)
+        self.client.post(self.url, data=post_data)
+        self.assertEqual(1, OrderItem.objects.get(order=order).quantity)
+
 
 class CartItemViewTestCase(BaseTest):
     def setUp(self) -> None:
@@ -111,3 +120,78 @@ class CartItemViewTestCase(BaseTest):
         self.assertEqual(response.status_code, 200)
         order = Order.objects.get(user=self.user)
         self.assertEqual(order.amount, self.product2.price)
+
+
+class CheckoutViewTestCase(BaseTest):
+    def setUp(self) -> None:
+        self.url = reverse("checkout")
+        super().setUp()
+        self.order = Order.objects.create(user=self.user, is_paid=False)
+        self.client.post(reverse("cart"), data=dict(productId=self.product1.pk))
+        self.client.post(reverse("cart"), data=dict(productId=self.product2.pk))
+
+    def test_get_checkout(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        order = Order.objects.get(user=self.user)
+        items = OrderItem.objects.filter(order=order)
+        self.assertEqual(order, response.context["order"])
+        self.assertQuerysetEqual(items, response.context["items"], ordered=False)
+
+    def test_get_staff_checkout(self):
+        self.user.is_staff = True
+        self.user.save()
+        response = self.client.get(self.url)
+        self.assertIn("profiles", response.context.keys())
+
+    def test_complete_checkout(self):
+        post_data = dict(orderId=self.order.pk)
+        response = self.client.post(self.url, data=post_data)
+        self.assertEqual(response.status_code, 200)
+        payment = Payment.objects.get(order=self.order)
+        order = Order.objects.get(pk=self.order.pk)
+        self.assertEqual(payment.amount_paid, order.amount)
+        self.assertTrue(order.is_paid)
+        stock_quantity = Product.objects.get(pk=self.product1.pk).stock_quantity
+        self.assertLess(stock_quantity, self.product1.stock_quantity)
+
+    def test_deactivate_out_of_stock_products(self):
+        self.product1.stock_quantity = 1
+        self.product1.save()
+        post_data = dict(orderId=self.order.pk)
+        self.client.post(self.url, data=post_data)
+        product = Product.objects.get(pk=self.product1.pk)
+        self.assertFalse(product.active)
+
+
+class ReassignOrderViewTestCase(BaseTest):
+    def setUp(self) -> None:
+        self.url = reverse("reassign_order")
+        super().setUp()
+        self.order = Order.objects.create(user=self.user, is_paid=False)
+        self.new_user = User.objects.create_user(
+            username="user1", email="user1@example.com", password="user1pass"
+        )
+        self.new_user_profile = UserProfile.objects.create(
+            user=self.new_user,
+            birthday=datetime.today(),
+            gender=2,
+            phone="+123456789",
+            address="Somewhere, Middle Of.",
+        )
+
+    def test_post(self):
+        self.user.is_staff = True
+        self.user.save()
+        post_data = dict(orderId=self.order.pk, profileId=self.new_user_profile.pk)
+        response = self.client.post(self.url, data=post_data)
+        self.assertEqual(response.status_code, 200)
+        order = Order.objects.get(pk=self.order.pk)
+        self.assertEqual(self.new_user, order.user)
+
+    def test_restricted_for_non_staff(self):
+        self.user.is_staff = False
+        self.user.save()
+        post_data = dict(orderId=self.order.pk, profileId=self.new_user_profile.pk)
+        response = self.client.post(self.url, data=post_data)
+        self.assertEqual(response.status_code, 302)
