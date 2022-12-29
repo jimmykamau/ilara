@@ -31,15 +31,23 @@ class CartView(LoginRequiredMixin, View):
                 user=request.user, is_paid=False
             )
             product = Product.objects.get(pk=request.POST.get("productId"))
-            order_item, created = OrderItem.objects.get_or_create(
-                order=order, product=product
-            )
-            if not created:
-                order_item.quantity += 1
-                order_item.save()
-            order.amount += product.price
-            order.save()
-            return JsonResponse({"message": "success"})
+            if product.in_stock:
+                order_item, created = OrderItem.objects.get_or_create(
+                    order=order, product=product
+                )
+                if not created:
+                    if product.stock_quantity - order_item.quantity > 1:
+                        order_item.quantity += 1
+                        order_item.save()
+                    else:
+                        return JsonResponse({"message": "Out of stock"})
+                order.amount += product.price
+                order.save()
+                return JsonResponse({"message": "success"})
+            else:
+                product.active = False
+                product.save()
+                return JsonResponse({"message": "Out of stock"})
         except Exception as e:
             return JsonResponse({"message": "error", "exception": str(e)})
 
